@@ -1,6 +1,10 @@
 const express = require('express');
-const userRouter = require('./src/router/user.router');
 const app = express();
+
 app.use(express.json());
-app.use('/users', userRouter);  
-module.exports = app;
+
+app.use('/users',    require('./src/router/user.router'));
+app.use('/products', require('./src/router/product.router'));
+app.use('/orders',   require('./src/router/order.router'));
+
+module.exports = app;
