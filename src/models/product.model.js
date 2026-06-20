@@ -1,32 +1,36 @@
 const mongodb = require('mongodb');
 const { getDB } = require('../config/db');
 
-// just a shorthand so we don't repeat this everywhere
+// shorthand collection accessor
 function col() {
     return getDB().collection('products');
 }
 
+// Insert with createdAt + updatedAt timestamps
 async function addProduct(data) {
-    data.createdAt = new Date();
-    return col().insertOne(data);
+    const now = new Date();
+    data.createdAt = now;
+    data.updatedAt = now;
+    const result = await col().insertOne(data);
+    return col().findOne({ _id: result.insertedId });
 }
 
 async function fetchAll() {
-    let results = await col().find({}).toArray();
-    return results;
+    return col().find({}).toArray();
 }
 
 async function fetchOne(id) {
     return col().findOne({ _id: new mongodb.ObjectId(id) });
 }
 
-// only update fields that are passed in — don't wipe the whole doc
+// Partial update — stamp updatedAt, return fresh document
 async function modifyProduct(id, changes) {
-    let res = await col().updateOne(
+    changes.updatedAt = new Date();
+    await col().updateOne(
         { _id: new mongodb.ObjectId(id) },
         { $set: changes }
     );
-    return res;
+    return col().findOne({ _id: new mongodb.ObjectId(id) });
 }
 
 async function removeProduct(id) {
@@ -34,3 +38,4 @@ async function removeProduct(id) {
 }
 
 module.exports = { addProduct, fetchAll, fetchOne, modifyProduct, removeProduct };
+

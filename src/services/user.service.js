@@ -1,9 +1,12 @@
 const userModel = require('../models/user.modedl');
 
 const createUser = async (userData) => {
-    if (!userData.name ) {
-        throw new Error('Name is required');
-    }
+    if (!userData.name    || String(userData.name).trim()    === '') throw new Error('name is required');
+    if (!userData.email   || String(userData.email).trim()   === '') throw new Error('email is required');
+    if (!userData.phone   || String(userData.phone).trim()   === '') throw new Error('phone is required');
+    if (!userData.address || String(userData.address).trim() === '') throw new Error('address is required');
+    // normalise email to lowercase per spec
+    userData.email = String(userData.email).toLowerCase().trim();
     return await userModel.createUser(userData);
 };
 
@@ -12,10 +15,14 @@ const getallUsers = async () => {
 };
 
 const getUserById = async (id) => {
-    return await userModel.getUserById(id);
+    const user = await userModel.getUserById(id);
+    if (!user) throw new Error('User not found');
+    return user;
 };
 
 const updateUser = async (id, userData) => {
+    // normalise email if being updated
+    if (userData.email) userData.email = String(userData.email).toLowerCase().trim();
     return await userModel.updateUser(id, userData);
 };
 
@@ -30,3 +37,4 @@ module.exports = {
     updateUser,
     deleteUser
 };
+

@@ -1,10 +1,11 @@
 const db = require('../models/product.model');
 
 async function createProduct(body) {
-    // name and price are the bare minimum we need
-    if (!body.name || body.name.trim() === '') throw new Error('name is missing');
-    if (body.price == null) throw new Error('price cannot be empty');
-
+    if (!body.name        || String(body.name).trim() === '')        throw new Error('name is required');
+    if (!body.description || String(body.description).trim() === '') throw new Error('description is required');
+    if (body.price == null || body.price < 0)                        throw new Error('price is required and must be >= 0');
+    if (body.quantity == null || body.quantity < 0)                  throw new Error('quantity is required and must be >= 0');
+    if (!body.category    || String(body.category).trim() === '')    throw new Error('category is required');
     return db.addProduct(body);
 }
 
@@ -13,14 +14,13 @@ async function listProducts() {
 }
 
 async function getProduct(id) {
-    let product = await db.fetchOne(id);
-    if (!product) throw new Error('no product found with that id');
+    const product = await db.fetchOne(id);
+    if (!product) throw new Error('No product found with that id');
     return product;
 }
 
 async function editProduct(id, updates) {
-    // make sure product exists before trying to update
-    await getProduct(id);
+    await getProduct(id); // ensure exists
     return db.modifyProduct(id, updates);
 }
 
@@ -30,3 +30,4 @@ async function deleteProduct(id) {
 }
 
 module.exports = { createProduct, listProducts, getProduct, editProduct, deleteProduct };
+

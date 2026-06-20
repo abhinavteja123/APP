@@ -3,11 +3,14 @@ const { getDB } = require('../config/db');
 
 const orders = () => getDB().collection('orders');
 
-// insert a new order document
+// Insert a new order document with ISO timestamps
 const saveOrder = async (orderData) => {
-    orderData.placedAt = new Date();
-    orderData.status = orderData.status || 'pending';
-    return await orders().insertOne(orderData);
+    const now = new Date();
+    orderData.status    = orderData.status || 'pending';
+    orderData.createdAt = now;
+    orderData.updatedAt = now;
+    const result = await orders().insertOne(orderData);
+    return orders().findOne({ _id: result.insertedId });
 };
 
 const getOrders = async () => {
@@ -18,12 +21,14 @@ const getOrderById = async (id) => {
     return await orders().findOne({ _id: new ObjectId(id) });
 };
 
-// partial update — caller decides which fields change
+// Partial update — always stamp updatedAt
 const patchOrder = async (id, fields) => {
-    return await orders().updateOne(
+    fields.updatedAt = new Date();
+    await orders().updateOne(
         { _id: new ObjectId(id) },
         { $set: fields }
     );
+    return orders().findOne({ _id: new ObjectId(id) });
 };
 
 const destroyOrder = async (id) => {
@@ -37,3 +42,4 @@ module.exports = {
     patchOrder,
     destroyOrder,
 };
+
